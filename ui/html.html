@@ -1,0 +1,110 @@
+<!--Menu Container-->
+
+<div id="highlighter-menu-container">
+    <div id="highlighter-menu-notification-container">
+        <div id="highlighter-menu-title-message" class="highlighter-notification-message"></div>
+        <div id="highlighter-menu-normal-message" class="highlighter-notification-message"></div>
+        <div id="highlighter-menu-error-message" class="highlighter-notification-message"></div>
+    </div>
+    <div id="highlighter-menu-content"></div>
+</div>
+
+<!--Menu Open Button-->
+<a role="button">
+    <span>Highlighter</span>
+</a>
+
+<!--Create-->
+
+<div id="highlighter-create-container">
+
+    <div id="highlighter-create-category-container" class="highlighter-group-box">
+        <div class="highlighter-group-box-title">Category Creator</div>
+        <div class="highlighter-inline-container">
+            <label for="highlighter-create-category-name" class="highlighter-input-label">Category:</label>
+            <input type="text" class="highlighter-input" id="highlighter-create-category-name" placeholder="Name"/>
+            <input id='highlighter-create-category-color'/>
+        </div>
+        <div class="highlighter-inline-container">
+            <label class="highlighter-input-label" for="highlighter-create-custom-css-text-area">CSS:</label>
+            <textarea class="highlighter-input" id="highlighter-create-custom-css-text-area" placeholder="Custom CSS"></textarea>
+        </div>
+        <button class="highlighter-input" id="highlighter-add-category-btn">Add Category</button>
+    </div>
+
+    <div id="highlighter-create-word-container" class="highlighter-group-box">
+        <div class="highlighter-group-box-title">Word Creator</div>
+        <div id="highlighter-stacked-container">
+            <div class="highlighter-inline-container">
+                <label for="highlighter-create-word-text" class="highlighter-input-label">Word:</label>
+                <input type="text" class="highlighter-input" id="highlighter-create-word-text" placeholder="Text"/>
+                <label for="highlighter-create-word-regex-chk" class="highlighter-input-label">Regex:</label>
+                <input type="checkbox" id="highlighter-create-word-regex-chk">
+                <label for="highlighter-create-word-whole-word-chk" class="highlighter-input-label">Whole:</label>
+                <input type="checkbox" id="highlighter-create-word-whole-word-chk">
+                <label for="highlighter-create-word-case-sensitive-chk" class="highlighter-input-label">Case:</label>
+                <input type="checkbox" id="highlighter-create-word-case-sensitive-chk">
+            </div>
+            <div class="highlighter-inline-container">
+                <label class="highlighter-input-label" for="highlighter-create-word-category">Category:</label>
+                <select class="highlighter-input" id="highlighter-create-word-category">
+                    <option selected>No Categories Available</option>
+                </select>
+            </div>
+            <div id="highlighter-create-word-category-color"></div>
+        </div>
+        <button class="highlighter-input" id="highlighter-add-word-btn">Add Word</button>
+    </div>
+
+</div>
+
+<!--Update-->
+
+<div id="highlighter-update-container">
+
+    <div id="highlighter-category-update-container" class="highlighter-group-box">
+        <div class="highlighter-group-box-title">Category Updater</div>
+        <div class="highlighter-inline-container">
+            <label class="highlighter-input-label" for="highlighter-update-category-select">Category:</label>
+            <select class="highlighter-input" id="highlighter-update-category-select">
+                <option selected>No Categories Available</option>
+            </select>
+            <input id='highlighter-update-category-color'/>
+        </div>
+        <div class="highlighter-inline-container">
+            <label class="highlighter-input-label" for="highlighter-update-category-name">Name:</label>
+            <input type="text" class="highlighter-input" id="highlighter-update-category-name" placeholder="Name"/>
+        </div>
+        <div class="highlighter-inline-container">
+            <label class="highlighter-input-label" for="highlighter-update-custom-css-text-area">CSS:</label>
+            <textarea class="highlighter-input" id="highlighter-update-custom-css-text-area" placeholder="Custom CSS"></textarea>
+        </div>
+        <button class="highlighter-input" id="highlighter-update-category-btn">Update</button>
+        <button class="highlighter-input" id="highlighter-remove-category-btn">Remove</button>
+    </div>
+
+    <div id="highlighter-word-update-container" class="highlighter-group-box">
+        <div class="highlighter-group-box-title">Word Updater</div>
+        <div class="highlighter-inline-container">
+            <label class="highlighter-input-label" for="highlighter-update-word-select">Word:</label>
+            <select class="highlighter-input" id="highlighter-update-word-select">
+                <option selected>No Words Available</option>
+            </select>
+            <label for="highlighter-update-word-regex-chk" class="highlighter-input-label">Regex:</label>
+            <input type="checkbox" id="highlighter-update-word-regex-chk" disabled="disabled">
+            <label for="highlighter-update-word-whole-word-chk" class="highlighter-input-label">Whole:</label>
+            <input type="checkbox" id="highlighter-update-word-whole-word-chk">
+            <label for="highlighter-update-word-case-sensitive-chk" class="highlighter-input-label">Case:</label>
+            <input type="checkbox" id="highlighter-update-word-case-sensitive-chk">
+        </div>
+        <div class="highlighter-inline-container">
+            <label class="highlighter-input-label" for="highlighter-update-word-category-select">Category:</label>
+            <select class="highlighter-input" id="highlighter-update-word-category-select">
+                <option selected>No Categories Available</option>
+            </select>
+        </div>
+        <button class="highlighter-input" id="highlighter-update-word-btn">Update</button>
+        <button class="highlighter-input" id="highlighter-remove-word-btn">Remove</button>
+    </div>
+
+</div>

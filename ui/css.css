@@ -1,0 +1,90 @@
+#highlighter-menu-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: none;
+    width: 100%;
+    background-color: black;
+    color: white;
+    border-radius: 5px;
+    z-index: 1000;
+}
+#highlighter-menu-content{
+    width: 100%;
+    position: relative;
+    display: inline-flex;
+}
+#highlighter-menu-notification-container{
+    padding: 10px;
+    position: relative;
+    text-align: center;
+    height: 35px;
+}
+#highlighter-menu-error-message{
+    display: none;
+    color: red;
+}
+#highlighter-menu-normal-message{
+    display: none;
+    color: limegreen;
+}
+.highlighter-notification-message{
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom:0;
+    margin-top: 17.5px;
+    font-size: 20px;
+}
+.highlighter-form-container{
+    width: 100%;
+    background-color: gray;
+    margin: 5px;
+    padding: 10px;
+    border: solid white 1px;
+}
+.highlighter-input{
+    width: 100%;
+    box-sizing: border-box;
+    height: auto;
+}
+input.highlighter-input{
+    height: auto;
+}
+select.highlighter-input{
+    height: 30px;
+}
+.sp-replacer.sp-light{
+    height: 21px;
+    border-radius: 5px;
+}
+.highlighter-group-box{
+    border: solid white 1px;
+    padding: 5px;
+    margin: 5px;
+    border-radius: 5px;
+}
+.highlighter-stacked-container{
+    width: 100%;
+}
+.highlighter-inline-container{
+    display: inline-flex;
+    width: 100%;
+}
+.highlighter-input-label{
+    line-height: 30px;
+    margin-left: 5px;
+    margin-right: 5px;
+    text-align: right;
+    width: 70px !important;
+}
+input[type='checkbox'] {
+    height: 23px;
+    margin-right: 5px;
+}
+mark{
+    all:unset;
+    color:inherit;
+    background-color: inherit;
+}
