@@ -153,9 +153,6 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
     if(menuToggledAction){
         _menuContainer.onMenuToggle = menuToggledAction;
     }
-    if(customMenuButton){
-        _menuContainer.onCustomMenuButtonClick = customMenuButtonAction;
-    }
 
     this.showMessage = function (message, isError) {
         isError = isError || false;
@@ -325,8 +322,6 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
 
         this.onMenuToggle = null;
 
-        let customMenuButton = null;
-
         _.titleMessageElement.innerHTML = titleText;
         $(_.titleMessageElement).show();
 
@@ -347,8 +342,10 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
                 _.onCustomMenuButtonClick !== null ? $(customMenuButton).show() : $(customMenuButton).hide();
                 sendMenuToggled(!visible);
             };
-            buttonContainer.appendChild(customMenuButton);
 
+            if(customMenuButton){
+                buttonContainer.appendChild(customMenuButton);
+            }
         }
 
         function sendMenuToggled(isVisible) {
