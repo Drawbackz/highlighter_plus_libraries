@@ -1,4 +1,4 @@
-function UI(highlighter, titleText, menuToggledAction, customMenuButtonAction) {
+function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
 
     let $ = window.jQuery = jQuery.noConflict(true);
 
@@ -153,7 +153,7 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButtonAction) {
     if(menuToggledAction){
         _menuContainer.onMenuToggle = menuToggledAction;
     }
-    if(customMenuButtonAction){
+    if(customMenuButton){
         _menuContainer.onCustomMenuButtonClick = customMenuButtonAction;
     }
 
@@ -324,7 +324,6 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButtonAction) {
         this.content = _.menuContent;
 
         this.onMenuToggle = null;
-        this.onCustomMenuButtonClick = null;
 
         let customMenuButton = null;
 
@@ -348,12 +347,8 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButtonAction) {
                 _.onCustomMenuButtonClick !== null ? $(customMenuButton).show() : $(customMenuButton).hide();
                 sendMenuToggled(!visible);
             };
-
-            customMenuButton = document.createElement('button');
-            customMenuButton.id = 'highlighter-custom-menu-button';
-            customMenuButton.innerHTML = 'Custom';
-            customMenuButton.onclick = sendCustomMenuButtonClicked;
             buttonContainer.appendChild(customMenuButton);
+
         }
 
         function sendMenuToggled(isVisible) {
