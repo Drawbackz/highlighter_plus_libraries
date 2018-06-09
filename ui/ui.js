@@ -140,7 +140,7 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButtonAction) {
     };
     _updateForm.onCategoryRemoved = function () {
         if (_updateForm.category.isValid()) {
-            _highlighter.removeCategory(_highlighter.categories[_updateForm.category.selectedIndex()].name);
+            _highlighter.removeCategory(_updateForm.category.selectedIndex());
             _updateForm.category.reset();
         }
         else {
@@ -350,6 +350,7 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButtonAction) {
             };
 
             customMenuButton = document.createElement('button');
+            customMenuButton.id = 'highlighter-custom-menu-button';
             customMenuButton.innerHTML = 'Custom';
             customMenuButton.onclick = sendCustomMenuButtonClicked;
             buttonContainer.appendChild(customMenuButton);

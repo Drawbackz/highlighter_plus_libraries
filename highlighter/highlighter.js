@@ -5,7 +5,6 @@ function ChatHighlighter() {
     $.extend({
         replaceTag: function (element, tagName, withDataAndEvents, deepWithDataAndEvents) {
             let newTag = $("<" + tagName + ">")[0];
-            // From [Stackoverflow: Copy all Attributes](http://stackoverflow.com/a/6753486/2096729)
             $.each(element.attributes, function () {
                 newTag.setAttribute(this.name, this.value);
             });
@@ -15,48 +14,46 @@ function ChatHighlighter() {
     });
     $.fn.extend({
         replaceTag: function (tagName, withDataAndEvents, deepWithDataAndEvents) {
-            // Use map to reconstruct the selector with newly created elements
             return this.map(function () {
                 return jQuery.replaceTag(this, tagName, withDataAndEvents, deepWithDataAndEvents);
             })
         }
     });
-    $.fn.replaceWithPush = function(a) {
-        let $a = $(a);
-        this.replaceWith($a);
-        return $a;
-    };
     //endregion
+
+    unsafeWindow.highlighter = this;
 
     let _ = this;
     let _ui = null;
     let _observer = new CachedMutationObserver();
     _observer.onObservation = processElement;
-
+    let _clearingHighlights = false;
     this.words = JSON.parse(GM_getValue('words') || '[]');
     this.categories = JSON.parse(GM_getValue('categories') || '[]');
 
     (function () {
-        initWords();
-        sortWords();
+        for (let i = 0; i < _.words.length; i++) {
+            let word = _.words[i];
+            if (word.regex) {
+                word.expression = makeRegex(word.text);
+            }
+        }
         for (let i = 0; i < _.categories.length; i++) {
             addCategoryStyle(_.categories[i]);
         }
+        sortWords();
         _observer.start();
     })();
 
     this.attachUI = function (ui) {
-        if (ui.constructor.name !== 'UI') {
-            _ui = null;
-            return false;
-        }
-        else {
+        if (ui.constructor.name === 'UI') {
             _ui = ui;
-            window.document.body.insertBefore(_ui.element, document.body.childNodes[0]);
             _ui.updateWords();
             _ui.updateCategories();
-            return true;
+            window.document.body.insertBefore(_ui.element, document.body.childNodes[0]);
+            return;
         }
+        _ui = null;
     };
 
     //region Category Modification Functions
@@ -66,12 +63,12 @@ function ChatHighlighter() {
             addCategoryStyle(category);
             _.categories.push(category);
             _.saveCategories();
-            return true;
+            return category;
         }
-        return false;
+        return null;
     };
-    this.updateCategory = function (categoryIndex, name, color, css) {
-        let category = _.categories[categoryIndex];
+    this.updateCategory = function (index, name, color, css) {
+        let category = _.categories[index];
         removeCategoryStyle(category);
         category.name = name;
         category.color = color;
@@ -79,13 +76,10 @@ function ChatHighlighter() {
         addCategoryStyle(category);
         _.saveCategories();
     };
-    this.removeCategory = function (name) {
-        removeCategoryStyle(_.categories.find(function (x) {
-            return x.name === name;
-        }));
-        _.categories = _.categories.filter(function (category) {
-            return category.name !== name;
-        });
+    this.removeCategory = function (index) {
+        let category = _.categories[index];
+        removeCategoryStyle(category);
+        _.categories = _.categories.filter(x => x.name === category.name);
         _.saveCategories();
     };
     this.saveCategories = function () {
@@ -93,7 +87,6 @@ function ChatHighlighter() {
         if (_ui !== null) {
             _ui.updateCategories();
         }
-        clearWordHighlights();
         highlightAll();
     };
     //endregion
@@ -101,26 +94,28 @@ function ChatHighlighter() {
     //region Word Modification Functions
     this.addWord = function (word, regex, wholeWord, matchCase, category) {
         if (_.words.find(x => x.text === word) === undefined) {
-            _.words.push(new HighlighterWord(word, regex, wholeWord, matchCase, category));
+            let highlighterWord = new HighlighterWord(word, regex, wholeWord, matchCase, category)
+            _.words.push(highlighterWord);
             _.saveWords();
-            return true;
+            return highlighterWord;
         }
-        return false;
+        return null;
     };
-    this.updateWord = function (wordIndex, wholeWord, matchCase, categoryIndex) {
-        let word = _.words[wordIndex];
+    this.updateWord = function (index, wholeWord, matchCase, categoryIndex) {
+        let word = _.words[index];
         word.wholeWord = wholeWord;
         word.matchCase = matchCase;
         word.category = _.categories[categoryIndex];
         _.saveWords();
     };
-    this.enableWord = function (string) {
-        let word = _.words.find(x => x.string === string);
-        if (word !== undefined) {
-            word.enabled = true;
+    this.enableWord = function (index) {
+        let word = _.words[index];
+        if (word === undefined) {
+            return;
         }
+        word.enabled = true;
     };
-    this.disableWord = function (string) {
+    this.disableWord = function (index) {
         let word = _.words.find(x => x.string === string);
         if (word !== undefined) {
             word.enabled = false;
@@ -133,13 +128,12 @@ function ChatHighlighter() {
         _.saveWords();
     };
     this.saveWords = function () {
-        sortWords();
-        clearWordHighlights();
         GM_setValue('words', JSON.stringify(_.words));
-        highlightAll();
         if (_ui !== null) {
             _ui.updateWords();
         }
+        sortWords();
+        highlightAll();
     };
     //endregion
 
@@ -148,15 +142,6 @@ function ChatHighlighter() {
 
     function isMenuItem(ele) {
         return _ui.element.contains(ele);
-    }
-
-    function initWords() {
-        for (let i = 0; i < _.words.length; i++) {
-            let word = _.words[i];
-            if (word.regex) {
-                word.expression = makeRegex(word.text);
-            }
-        }
     }
 
     function sortWords() {
@@ -184,7 +169,7 @@ function ChatHighlighter() {
         if (isMenuItem(ele)) {
             return;
         }
-        for(let i = 0; i < _.words.length; i++){
+        for (let i = 0; i < _.words.length; i++) {
             highlightElementTextNodes(ele, _.words[i]);
         }
         let buttons = ele.querySelectorAll('input[type="button"]:not([hidden="true"]):not([style="display:none;"])');
@@ -199,34 +184,44 @@ function ChatHighlighter() {
         if (targetNodes.length !== 0) {
             for (let i = 0; i < targetNodes.length; i++) {
                 let node = targetNodes[i];
-                if(isMenuItem(node)){continue;}
+                if (isMenuItem(node)) {
+                    continue;
+                }
                 replaceWord(node, word.text, word.wholeWord, word.matchCase, word.regex ? word.expression : null, word.category.elementId);
             }
         }
     }
+
     function highlightButtonElements(eles) {
         let targetElements = eles;
         for (let i = 0; i < targetElements.length; i++) {
             let element = targetElements[i];
-            if(isMenuItem(element)){continue;}
+            if (isMenuItem(element)) {
+                continue;
+            }
             element = convertInputButtonToButton(element);
-            for(let j = 0; j < _.words.length; j++){
+            for (let j = 0; j < _.words.length; j++) {
                 highlightElementTextNodes(element, _.words[j]);
             }
         }
     }
 
     function highlightAll() {
+        clearWordHighlights();
         highlightButtons();
         highlightWords();
     }
 
     function highlightWords() {
         let targetElements = getTextNodes();
-        if (targetElements.length === 0) {return;}
+        if (targetElements.length === 0) {
+            return;
+        }
         for (let i = 0; i < targetElements.length; i++) {
             let element = targetElements[i];
-            if (isMenuItem(targetElements[i])) {continue;}
+            if (isMenuItem(targetElements[i])) {
+                continue;
+            }
             for (let j = 0; j < _.words.length; j++) {
                 let word = _.words[j];
                 let className = word.category.elementId;
@@ -237,35 +232,56 @@ function ChatHighlighter() {
 
     function highlightButtons() {
         let targetElements = document.querySelectorAll('input[type="button"]:not([hidden="true"]):not([style="display:none;"])');
-        for (let i = 0; i < targetElements.length; i++) {
-            let element = targetElements[i];
-            if (isMenuItem(element)) {continue;}
-            element = convertInputButtonToButton(element);
-            for (let j = 0; j < _.words.length; j++) {
-                let word = _.words[j];
-                let className = word.category.elementId;
-                replaceWord(element, word.text, word.wholeWord, word.matchCase, word.regex ? word.expression : null, className);
+        if (targetElements.length > 0) {
+            for (let i = 0; i < targetElements.length; i++) {
+                let element = targetElements[i];
+                if (isMenuItem(element)) {
+                    continue;
+                }
+                element = convertInputButtonToButton(element);
+                for (let j = 0; j < _.words.length; j++) {
+                    let word = _.words[j];
+                    let className = word.category.elementId;
+                    replaceWord(element, word.text, word.wholeWord, word.matchCase, word.regex ? word.expression : null, className);
+                }
+            }
+        }
+        else {
+            targetElements = document.querySelectorAll('button[class="highlighter-button"]');
+            if (targetElements.length > 0) {
+                for (let i = 0; i < targetElements.length; i++) {
+                    let element = targetElements[i];
+                    for (let j = 0; j < _.words.length; j++) {
+                        let word = _.words[j];
+                        highlightElementTextNodes(element, word);
+                    }
+                }
             }
         }
     }
 
     function clearWordHighlights() {
-        let spanElements = document.getElementsByTagName('mark');
-        let elements = [];
-        for (let i = 0; i < spanElements.length; i++) {
-            if (spanElements[i].className.indexOf('highlighter-category') > -1) {
-                elements.push(spanElements[i]);
-            }
+        _clearingHighlights = true;
+        let moddedButtonElements = document.querySelectorAll('button[class="highlighter-button"]');
+        for (let i = 0; i < moddedButtonElements.length; i++) {
+            let element = moddedButtonElements[i];
+            element.innerHTML = element.value;
         }
-        for (let i = 0; i < elements.length; i++) {
-            elements[i].outerHTML = elements[i].innerHTML;
+        let marks;
+        while ((marks = $('mark')).length > 0) {
+            marks.each(function (index) {
+                this.outerHTML = this.innerHTML;
+            });
         }
+        _clearingHighlights = false;
     }
 
     function replaceWord(node, word, whole, match, regex, className) {
         let _whole = `${whole ? '\\b' : ''}`;
         let _match = `${match ? '' : 'i'}`;
-        if (node.textContent.trim() === '') {return;}
+        if (node.textContent.trim() === '') {
+            return;
+        }
         let ele = $(node);
         let changed = false;
         let newContent = ele.text().replace(regex || new RegExp(`${_whole}${word}${_whole}`, `g${_match}`), function (match) {
@@ -273,7 +289,7 @@ function ChatHighlighter() {
             return `<mark class='${className}'>${match}</mark>`;
         });
         if (changed) {
-            return $(`<mark>${newContent}</mark>`).replaceAll(ele);
+            return $(`<mark class="highlighter-mark-container">${newContent}</mark>`).replaceAll(ele);
         }
         return ele;
     }
@@ -284,13 +300,14 @@ function ChatHighlighter() {
         try {
             clone = ele.clone().replaceTag('button', true, true);
         }
-        catch(e) {
+        catch (e) {
             console.log('Conversion Error');
             console.log(e);
             return null;
         }
         if (clone) {
-            clone.append($(`<mark class="highlighter-button-content">${element.value}</mark>`));
+            clone.addClass('highlighter-button');
+            clone.html(element.value);
             ele.replaceWith(clone);
             return clone[0];
         }
@@ -307,7 +324,7 @@ function ChatHighlighter() {
             pattern = pattern.substr(0, pattern.length - flags.length - 1);
             return new RegExp(pattern, flags);
         }
-        catch (e){
+        catch (e) {
             return "";
         }
     }
@@ -375,6 +392,9 @@ function ChatHighlighter() {
         let _isObserving = false;
 
         let observer = new MutationObserver(function (list) {
+            if (_clearingHighlights) {
+                return;
+            }
             for (let mutation of list) {
                 let cachedElement = _cache.find(function (ele) {
                     return ele.isEqualNode(mutation.target) || mutation.target.id === ele.id;
@@ -394,22 +414,25 @@ function ChatHighlighter() {
             }
         });
 
-        this.start = function() {
-            if(_isObserving){return;}
+        this.start = function () {
+            if (_isObserving) {
+                return;
+            }
             _isObserving = true;
             observer.observe(document.body, {characterData: true, subtree: true, childList: true});
         };
         this.stop = function stop() {
-            if(_isObserving){
+            if (_isObserving) {
                 _isObserving = false;
                 observer.disconnect();
             }
         };
 
         this.onObservation = null;
-        function onObservation(element){
-            if(_.onObservation !== null){
-                if(!isMenuItem(element)){
+
+        function onObservation(element) {
+            if (_.onObservation !== null) {
+                if (!isMenuItem(element)) {
                     _.onObservation(element);
                 }
             }
