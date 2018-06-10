@@ -1,4 +1,4 @@
-function ChatHighlighter() {
+function HighlighterPlus() {
 
     //region JQuery Init
     let $ = window.jQuery = jQuery.noConflict(true);
@@ -20,30 +20,38 @@ function ChatHighlighter() {
         }
     });
     //endregion
-
-    unsafeWindow.highlighter = this;
-
     let _ = this;
     let _ui = null;
+
     let _observer = new CachedMutationObserver();
     _observer.onObservation = processElement;
+
+    let _highlighting = false;
     let _clearingHighlights = false;
     this.words = JSON.parse(GM_getValue('words') || '[]');
     this.categories = JSON.parse(GM_getValue('categories') || '[]');
+    this.enabled = true;
 
     (function () {
+        initWords();
+        initCategories();
+        _observer.start();
+    })();
+
+    function initWords() {
+        sortWords();
         for (let i = 0; i < _.words.length; i++) {
             let word = _.words[i];
             if (word.regex) {
                 word.expression = makeRegex(word.text);
             }
         }
+    }
+    function initCategories() {
         for (let i = 0; i < _.categories.length; i++) {
             addCategoryStyle(_.categories[i]);
         }
-        sortWords();
-        _observer.start();
-    })();
+    }
 
     this.attachUI = function (ui) {
         if (ui.constructor.name === 'UI') {
@@ -79,15 +87,15 @@ function ChatHighlighter() {
     this.removeCategory = function (index) {
         let category = _.categories[index];
         removeCategoryStyle(category);
-        _.categories = _.categories.filter(x => x.name === category.name);
+        _.categories = _.categories.filter(x => x.name !== category.name);
         _.saveCategories();
     };
     this.saveCategories = function () {
+        highlightAll();
         GM_setValue('categories', JSON.stringify(_.categories));
         if (_ui !== null) {
             _ui.updateCategories();
         }
-        highlightAll();
     };
     //endregion
 
@@ -96,6 +104,7 @@ function ChatHighlighter() {
         if (_.words.find(x => x.text === word) === undefined) {
             let highlighterWord = new HighlighterWord(word, regex, wholeWord, matchCase, category)
             _.words.push(highlighterWord);
+            initWords();
             _.saveWords();
             return highlighterWord;
         }
@@ -106,6 +115,7 @@ function ChatHighlighter() {
         word.wholeWord = wholeWord;
         word.matchCase = matchCase;
         word.category = _.categories[categoryIndex];
+        initWords();
         _.saveWords();
     };
     this.enableWord = function (index) {
@@ -128,12 +138,12 @@ function ChatHighlighter() {
         _.saveWords();
     };
     this.saveWords = function () {
+        initWords();
+        highlightAll();
         GM_setValue('words', JSON.stringify(_.words));
         if (_ui !== null) {
             _ui.updateWords();
         }
-        sortWords();
-        highlightAll();
     };
     //endregion
 
@@ -141,6 +151,11 @@ function ChatHighlighter() {
     this.clearHighlights = clearWordHighlights;
 
     function isMenuItem(ele) {
+        if(!_.enabled){return;}
+        let highlighterButtonContainer = document.getElementById('highlighter-button-container');
+        if(highlighterButtonContainer){
+            return document.getElementById('highlighter-button-container').contains(ele) || _ui.element.contains(ele);
+        }
         return _ui.element.contains(ele);
     }
 
@@ -165,28 +180,29 @@ function ChatHighlighter() {
     }
 
     function processElement(ele) {
-
-        if (isMenuItem(ele)) {
-            return;
-        }
-        for (let i = 0; i < _.words.length; i++) {
-            highlightElementTextNodes(ele, _.words[i]);
-        }
+        if (isMenuItem(ele)) {return;}
+        console.time('processElement');
         let buttons = ele.querySelectorAll('input[type="button"]:not([hidden="true"]):not([style="display:none;"])');
         if (buttons.length > 0) {
             highlightButtonElements(buttons, _.words);
         }
-
+        else{
+            for (let i = 0; i < _.words.length; i++) {
+                highlightElementTextNodes(ele, _.words[i]);
+            }
+        }
+        console.timeEnd('processElement');
     }
 
     function highlightElementTextNodes(ele, word) {
+        if(ele.className){
+            if(ele.className.indexOf('highlighter-')){return;}
+        }
         let targetNodes = textNodesUnder(ele);
         if (targetNodes.length !== 0) {
             for (let i = 0; i < targetNodes.length; i++) {
                 let node = targetNodes[i];
-                if (isMenuItem(node)) {
-                    continue;
-                }
+                if (isMenuItem(node)) {continue;}
                 replaceWord(node, word.text, word.wholeWord, word.matchCase, word.regex ? word.expression : null, word.category.elementId);
             }
         }
@@ -197,6 +213,7 @@ function ChatHighlighter() {
         for (let i = 0; i < targetElements.length; i++) {
             let element = targetElements[i];
             if (isMenuItem(element)) {
+                console.timeEnd('highlightButtonElements');
                 continue;
             }
             element = convertInputButtonToButton(element);
@@ -207,16 +224,20 @@ function ChatHighlighter() {
     }
 
     function highlightAll() {
+        if(_highlighting){return;}
+        _highlighting = true;
+        console.time('highlightTime');
         clearWordHighlights();
         highlightButtons();
         highlightWords();
+        console.timeEnd('highlightTime');
+        _highlighting = false;
     }
 
     function highlightWords() {
+        console.time('highlightWords');
         let targetElements = getTextNodes();
-        if (targetElements.length === 0) {
-            return;
-        }
+        if (targetElements.length === 0) {return;}
         for (let i = 0; i < targetElements.length; i++) {
             let element = targetElements[i];
             if (isMenuItem(targetElements[i])) {
@@ -228,9 +249,11 @@ function ChatHighlighter() {
                 replaceWord(element, word.text, word.wholeWord, word.matchCase, word.regex ? word.expression : null, className);
             }
         }
+        console.timeEnd('highlightWords');
     }
 
     function highlightButtons() {
+        console.time('highlightingButtons');
         let targetElements = document.querySelectorAll('input[type="button"]:not([hidden="true"]):not([style="display:none;"])');
         if (targetElements.length > 0) {
             for (let i = 0; i < targetElements.length; i++) {
@@ -258,9 +281,13 @@ function ChatHighlighter() {
                 }
             }
         }
+        console.timeEnd('highlightingButtons');
     }
 
     function clearWordHighlights() {
+        if(_clearingHighlights){return;}
+        console.log('CLEARING');
+        console.time('clearingHighlights');
         _clearingHighlights = true;
         let moddedButtonElements = document.querySelectorAll('button[class="highlighter-button"]');
         for (let i = 0; i < moddedButtonElements.length; i++) {
@@ -268,11 +295,13 @@ function ChatHighlighter() {
             element.innerHTML = element.value;
         }
         let marks;
-        while ((marks = $('mark')).length > 0) {
-            marks.each(function (index) {
-                this.outerHTML = this.innerHTML;
-            });
+        while ((marks = document.getElementsByTagName('mark')).length > 0) {
+            for(let i = 0; i < marks.length; i++){
+                marks[i].outerHTML = marks[i].innerHTML;
+            }
         }
+        document.body.normalize();
+        console.timeEnd('clearingHighlights');
         _clearingHighlights = false;
     }
 
@@ -289,9 +318,8 @@ function ChatHighlighter() {
             return `<mark class='${className}'>${match}</mark>`;
         });
         if (changed) {
-            return $(`<mark class="highlighter-mark-container">${newContent}</mark>`).replaceAll(ele);
+            $(`<mark>${newContent}</mark>`).replaceAll(ele);
         }
-        return ele;
     }
 
     function convertInputButtonToButton(element) {
@@ -345,11 +373,13 @@ function ChatHighlighter() {
     }
 
     function getTextNodes() {
+        console.time('getTextNodes');
         let targets = [];
         let eles = document.body.children;
         for (let i = 0; i < eles.length; i++) {
             targets = targets.concat(textNodesUnder(eles[i]));
         }
+        console.timeEnd('getTextNodes');
         return targets;
     }
 
@@ -392,9 +422,7 @@ function ChatHighlighter() {
         let _isObserving = false;
 
         let observer = new MutationObserver(function (list) {
-            if (_clearingHighlights) {
-                return;
-            }
+            if (_clearingHighlights || _highlighting) {return;}
             for (let mutation of list) {
                 let cachedElement = _cache.find(function (ele) {
                     return ele.isEqualNode(mutation.target) || mutation.target.id === ele.id;
@@ -432,11 +460,10 @@ function ChatHighlighter() {
 
         function onObservation(element) {
             if (_.onObservation !== null) {
-                if (!isMenuItem(element)) {
-                    _.onObservation(element);
-                }
+                _.onObservation(element);
             }
         }
 
     }
+
 }

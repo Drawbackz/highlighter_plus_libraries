@@ -344,15 +344,13 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
             };
 
             if(customMenuButton){
+                $(customMenuButton).addClass('highlighter-custom-button');
                 buttonContainer.appendChild(customMenuButton);
             }
         }
 
         function sendMenuToggled(isVisible) {
             if(_.onMenuToggle){_.onMenuToggle(isVisible);}
-        }
-        function sendCustomMenuButtonClicked(){
-            if(_.onCustomMenuButtonClick){_.onCustomMenuButtonClick();}
         }
 
         return this;
