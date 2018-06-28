@@ -27,34 +27,34 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
     this.element = _menuContainer.element;
     this.showMessage = _menuContainer.showMessage;
 
-    this.updateWords = function () {
+    this.updateWords = function (words) {
 
-        if (_highlighter.words.length === 0) {
+        if (words.length === 0) {
             _updateForm.word.updateDropDowns([new Option('No Words Available')]);
             return;
         }
 
         let options = [new Option('Select a word')];
 
-        for (let i = 0; i < _highlighter.words.length; i++) {
-            let word = _highlighter.words[i];
+        for (let i = 0; i < words.length; i++) {
+            let word = words[i];
             options.push(new Option(word.text, i));
         }
 
         _updateForm.word.updateDropDowns(options);
 
     };
-    this.updateCategories = function () {
+    this.updateCategories = function (categories) {
 
-        if (_highlighter.categories.length === 0) {
+        if (categories.length === 0) {
             _updateForm.category.updateDropDowns([new Option('No Categories Available')]);
             return;
         }
 
         let options = [new Option('Select a category')];
 
-        for (let i = 0; i < _highlighter.categories.length; i++) {
-            let category = _highlighter.categories[i];
+        for (let i = 0; i < categories.length; i++) {
+            let category = categories[i];
             options.push(new Option(category.name, i));
         }
 
@@ -70,9 +70,10 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
     _creationForm.onWordAdded = function () {
         if (_creationForm.word.isValid()) {
             let word = _creationForm.word.text();
-            let category = _highlighter.categories[_creationForm.word.category()];
-            _highlighter.addWord(word, _creationForm.word.rexeg(), _creationForm.word.wholeWord(), _creationForm.word.matchCase(), category);
+            let category = _highlighter.categoryCollection.get()[_creationForm.word.category()];
+            _highlighter.wordCollection.add(word, _creationForm.word.rexeg(), _creationForm.word.wholeWord(), _creationForm.word.matchCase(), category);
             _creationForm.word.reset();
+            _highlighter.reHighlight();
         }
         else {
             _.showMessage(_creationForm.lastError, true);
@@ -80,7 +81,7 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
     };
     _creationForm.onCategoryAdded = function () {
         if (_creationForm.category.isValid()) {
-            _highlighter.addCategory(_creationForm.category.name(), _creationForm.category.color(), _creationForm.category.css());
+            _highlighter.categoryCollection.add(_creationForm.category.name(), _creationForm.category.color(), _creationForm.category.css());
             _creationForm.category.reset();
         }
         else {
@@ -98,12 +99,12 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
             _updateForm.word.reset();
         }
         else {
-            _updateForm.word.set(_highlighter.words[index]);
+            _updateForm.word.set(_highlighter.wordCollection.getIndex(index));
         }
     };
     _updateForm.onWordUpdated = function () {
         if (_updateForm.word.isValid()) {
-            _highlighter.updateWord(_updateForm.word.selectedIndex(), _updateForm.word.wholeWord(), _updateForm.word.matchCase(), _updateForm.word.newCategoryIndex());
+            _highlighter.wordCollection.update(_updateForm.word.selectedIndex(), _updateForm.word.wholeWord(), _updateForm.word.matchCase(), _updateForm.word.newCategoryIndex());
             _updateForm.word.reset();
         }
         else {
@@ -112,7 +113,7 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
     };
     _updateForm.onWordRemoved = function () {
         if (_updateForm.word.isValid()) {
-            _highlighter.removeWord(_highlighter.words[_updateForm.word.selectedIndex()].text);
+            _highlighter.wordCollection.remove(_highlighter.wordCollection.getIndex(_updateForm.word.selectedIndex()).text);
             _updateForm.word.reset();
         }
         else {
@@ -126,12 +127,12 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
             _updateForm.category.reset();
         }
         else {
-            _updateForm.category.set(_highlighter.categories[index]);
+            _updateForm.category.set(_highlighter.categoryCollection.getIndex(index));
         }
     };
     _updateForm.onCategoryUpdated = function () {
         if (_updateForm.category.isValid()) {
-            _highlighter.updateCategory(_updateForm.category.selectedIndex(), _updateForm.category.newName(), _updateForm.category.newColor(), _updateForm.category.css());
+            _highlighter.categoryCollection.update(_updateForm.category.selectedIndex(), _updateForm.category.newName(), _updateForm.category.newColor(), _updateForm.category.css());
             _updateForm.category.reset();
         }
         else {
@@ -140,7 +141,7 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
     };
     _updateForm.onCategoryRemoved = function () {
         if (_updateForm.category.isValid()) {
-            _highlighter.removeCategory(_updateForm.category.selectedIndex());
+            _highlighter.categoryCollection.remove(_updateForm.category.selectedIndex());
             _updateForm.category.reset();
         }
         else {
@@ -203,6 +204,7 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
         //region Style
         let style = document.createElement('style');
         style.innerHTML = '#highlighter-menu-container {\n' +
+            '    all:unset;\n' +
             '    position: fixed;\n' +
             '    top: 0;\n' +
             '    left: 0;\n' +
@@ -211,7 +213,7 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
             '    background-color: black;\n' +
             '    color: white;\n' +
             '    border-radius: 5px;\n' +
-            '    z-index: 1000;\n' +
+            '    z-index: 999999;\n' +
             '}\n' +
             '#highlighter-menu-content{\n' +
             '    width: 100%;\n' +
@@ -238,7 +240,7 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
             '    right: 0;\n' +
             '    top: 0;\n' +
             '    bottom:0;\n' +
-            '    margin-top: 17.5px;\n' +
+            '    margin-top: 17px;\n' +
             '    font-size: 20px;\n' +
             '}\n' +
             '.highlighter-form-container{\n' +
@@ -290,7 +292,7 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
             'mark{\n' +
             '    all:unset;\n' +
             '    color:inherit;\n' +
-            '    background-color: transparent;\n' +
+            '    background-color: inherit;\n' +
             '}';
         window.document.head.appendChild(style);
         //endregion
@@ -329,17 +331,25 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
 
             let buttonContainer = document.createElement('div');
             buttonContainer.id = 'highlighter-button-container';
-            buttonContainer.style = 'display:inline-flex; cursor: pointer; z-index: 10000; position: fixed; top:0; right:0;';
+            buttonContainer.style = 'display:inline-flex; cursor: pointer; z-index: 10000000; position: fixed; top:0; right:0;';
             document.body.appendChild(buttonContainer);
 
             let menuButton = document.createElement('button');
             menuButton.innerHTML = 'H+';
             buttonContainer.appendChild(menuButton);
             menuButton.onclick = () => {
-                let menu = $(_.element);
-                let visible = menu.is(':visible');
-                visible ? $(menu).slideUp() : $(menu).slideDown();
-                _.onCustomMenuButtonClick !== null ? $(customMenuButton).show() : $(customMenuButton).hide();
+                console.log(_.element.style.display);
+                let visible = _.element.style.display === '' || _.element.style.display === 'none';
+                if(visible){
+                    _.element.style.display = 'block';
+                }
+                else {
+                    _.element.style.display = 'none';
+                }
+                //let menu = $(_.element);
+                //let visible = menu.is(':visible');
+                //visible ? $(menu).slideUp() : $(menu).slideDown();
+                //_.onCustomMenuButtonClick !== null ? $(customMenuButton).show() : $(customMenuButton).hide();
                 sendMenuToggled(!visible);
             };
 
@@ -604,7 +614,6 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
             return _;
         }
     }
-
     function CreationForm(menuContainer) {
 
         let _ = this;
@@ -783,7 +792,6 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
             return this;
         }
     }
-
     function Option(text, value) {
         let option = document.createElement('option');
         option.text = text;
