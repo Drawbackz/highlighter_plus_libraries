@@ -339,17 +339,13 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
             buttonContainer.appendChild(menuButton);
             menuButton.onclick = () => {
                 console.log(_.element.style.display);
-                let visible = _.element.style.display === '' || _.element.style.display === 'none';
+                let visible = _.element.style.display === 'block';
                 if(visible){
-                    _.element.style.display = 'block';
-                }
-                else {
                     _.element.style.display = 'none';
                 }
-                //let menu = $(_.element);
-                //let visible = menu.is(':visible');
-                //visible ? $(menu).slideUp() : $(menu).slideDown();
-                //_.onCustomMenuButtonClick !== null ? $(customMenuButton).show() : $(customMenuButton).hide();
+                else {
+                    _.element.style.display = 'block';
+                }
                 sendMenuToggled(!visible);
             };
 
