@@ -256,7 +256,7 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
             '    height: auto;\n' +
             '}\n' +
             'input.highlighter-input{\n' +
-            '    height: auto;\n' +
+            '    height: 30px;\n' +
             '}\n' +
             'select.highlighter-input{\n' +
             '    height: 30px;\n' +
@@ -267,9 +267,20 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
             '}\n' +
             '.highlighter-group-box{\n' +
             '    border: solid white 1px;\n' +
-            '    padding: 5px;\n' +
+            '    padding-left: 5px;\n' +
+            '    padding-right: 5px;\n' +
+            '    padding-bottom: 5px;\n' +
             '    margin: 5px;\n' +
+            '    margin-bottom: 15px;\n' +
             '    border-radius: 5px;\n' +
+            '}\n' +
+            '.highlighter-group-box-title{\n' +
+            '    display: inline-block;\n' +
+            '    position: relative;\n' +
+            '    top:-13px;\n' +
+            '    background-color: gray;\n' +
+            '    padding-right: 3px;\n' +
+            '    padding-left: 3px;\n' +
             '}\n' +
             '.highlighter-stacked-container{\n' +
             '    width: 100%;\n' +
@@ -283,11 +294,11 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
             '    margin-left: 5px;\n' +
             '    margin-right: 5px;\n' +
             '    text-align: right;\n' +
-            '    width: 70px !important;\n' +
+            '    width: 93px !important;\n' +
             '}\n' +
             'input[type=\'checkbox\'] {\n' +
-            '    height: 23px;\n' +
-            '    margin-right: 5px;\n' +
+            '    height: 27px;\n' +
+            '    margin-left: 0px;\n' +
             '}\n' +
             'mark{\n' +
             '    all:unset;\n' +

@@ -51,10 +51,13 @@
     height: auto;
 }
 input.highlighter-input{
-    height: auto;
+    height: 30px;
 }
 select.highlighter-input{
     height: 30px;
+}
+textarea.highlighter-input{
+    resize: vertical;
 }
 .sp-replacer.sp-light{
     height: 21px;
@@ -62,9 +65,20 @@ select.highlighter-input{
 }
 .highlighter-group-box{
     border: solid white 1px;
-    padding: 5px;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-bottom: 5px;
     margin: 5px;
+    margin-bottom: 15px;
     border-radius: 5px;
+}
+.highlighter-group-box-title{
+    display: inline-block;
+    position: relative;
+    top:-13px;
+    background-color: gray;
+    padding-right: 3px;
+    padding-left: 3px;
 }
 .highlighter-stacked-container{
     width: 100%;
@@ -78,11 +92,11 @@ select.highlighter-input{
     margin-left: 5px;
     margin-right: 5px;
     text-align: right;
-    width: 70px !important;
+    width: 93px !important;
 }
 input[type='checkbox'] {
-    height: 23px;
-    margin-right: 5px;
+    height: 27px;
+    margin-left: 0px;
 }
 mark{
     all:unset;
