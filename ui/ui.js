@@ -81,7 +81,7 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
     };
     _creationForm.onCategoryAdded = function () {
         if (_creationForm.category.isValid()) {
-            _highlighter.categoryCollection.add(_creationForm.category.name(), _creationForm.category.color(), _creationForm.category.css());
+            _highlighter.categoryCollection.add(_creationForm.category.name(), _creationForm.category.color(), _creationForm.category.backgroundColor(), _creationForm.category.css());
             _creationForm.category.reset();
         }
         else {
@@ -132,7 +132,7 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
     };
     _updateForm.onCategoryUpdated = function () {
         if (_updateForm.category.isValid()) {
-            _highlighter.categoryCollection.update(_updateForm.category.selectedIndex(), _updateForm.category.newName(), _updateForm.category.newColor(), _updateForm.category.css());
+            _highlighter.categoryCollection.update(_updateForm.category.selectedIndex(), _updateForm.category.newName(), _updateForm.category.newColor(), _updateForm.category.newBackgroundColor(), _updateForm.category.css());
             _updateForm.category.reset();
         }
         else {
@@ -441,7 +441,8 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
         this.category = {
             set: function (category) {
                 _container.category.name.value = category.name;
-                $(_container.category.colorSelector).spectrum('set', category.color);
+                $(_container.category.textColorSelector).spectrum('set', category.color);
+                $(_container.category.backgroundColorSelector).spectrum('set', category.backgroundColor);
                 _container.category.customCssTextArea.value = category.style;
                 _container.category.customCssTextArea.placeholder = `.${category.elementId}`;
             },
@@ -456,7 +457,10 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
                 return value;
             },
             newColor: function () {
-                return $(_container.category.colorSelector).spectrum('get').toHexString();
+                return $(_container.category.textColorSelector).spectrum('get').toRgbString();
+            },
+            newBackgroundColor: function () {
+                return $(_container.category.backgroundColorSelector).spectrum('get').toRgbString();
             },
             css: function () {
                 return _container.category.customCssTextArea.value;
@@ -465,7 +469,8 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
                 _container.category.name.value = '';
                 _container.category.selector.selectedIndex = 0;
                 _container.category.customCssTextArea.value = '';
-                $(_container.category.colorSelector).spectrum('set', '#ffffff');
+                $(_container.category.textColorSelector).spectrum('set', '#000000');
+                $(_container.category.backgroundColorSelector).spectrum('set', '#ffff00');
             },
             updateDropDowns: function (categoryOptions) {
                 $(_container.word.categorySelector).empty();
@@ -540,14 +545,15 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
 
         function Container() {
             //region HTML
-            let html = '    <div id="highlighter-category-update-container" class="highlighter-group-box">\n' +
+            let html = '<div id="highlighter-category-update-container" class="highlighter-group-box">\n' +
                 '        <div class="highlighter-group-box-title">Category Updater</div>\n' +
                 '        <div class="highlighter-inline-container">\n' +
                 '            <label class="highlighter-input-label" for="highlighter-update-category-select">Category:</label>\n' +
                 '            <select class="highlighter-input" id="highlighter-update-category-select">\n' +
                 '                <option selected>No Categories Available</option>\n' +
                 '            </select>\n' +
-                '            <input id=\'highlighter-update-category-color\'/>\n' +
+                '            <input id=\'highlighter-update-category-text-color\'/>\n' +
+                '            <input id=\'highlighter-update-category-background-color\'/>\n' +
                 '        </div>\n' +
                 '        <div class="highlighter-inline-container">\n' +
                 '            <label class="highlighter-input-label" for="highlighter-update-category-name">Name:</label>\n' +
@@ -607,15 +613,21 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
 
             _.category = {
                 selector: _container.querySelector('select[id="highlighter-update-category-select"]'),
-                colorSelector: $(_container.querySelector('input[id="highlighter-update-category-color"]')),
+                textColorSelector: $(_container.querySelector('input[id="highlighter-update-category-text-color"]')),
+                backgroundColorSelector: $(_container.querySelector('input[id="highlighter-update-category-background-color"]')),
                 name: _container.querySelector('input[id="highlighter-update-category-name"]'),
                 customCssTextArea: _container.querySelector('textarea[id="highlighter-update-custom-css-text-area"]'),
                 updateButton: _container.querySelector('button[id="highlighter-update-category-btn"]'),
                 removeButton: _container.querySelector('button[id="highlighter-remove-category-btn"]')
             };
 
-            $(_.category.colorSelector).spectrum({
-                color: "#ffffff"
+            $(_.category.textColorSelector).spectrum({
+                color: "#000000",
+                showAlpha: true
+            });
+            $(_.category.backgroundColorSelector).spectrum({
+                color: "#ffff00",
+                showAlpha: true
             });
 
             return _;
@@ -687,7 +699,10 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
                 return _container.category.name.value;
             },
             color: function () {
-                return $(_container.category.colorSelector).spectrum('get').toHexString();
+                return $(_container.category.textColorSelector).spectrum('get').toRgbString();
+            },
+            backgroundColor: function () {
+                return $(_container.category.backgroundColorSelector).spectrum('get').toRgbString();
             },
             css: function () {
                 return _container.category.customCssTextArea.value || '';
@@ -695,7 +710,8 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
             reset: function () {
                 _container.category.name.value = '';
                 _container.category.customCssTextArea.value = '';
-                $(_container.category.colorSelector).spectrum('set', '#ffffff');
+                $(_container.category.textColorSelector).spectrum('set', '#000000');
+                $(_container.category.backgroundColorSelector).spectrum('set', '#ffff00');
             },
             isValid: function () {
                 _.lastError = null;
@@ -728,12 +744,13 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
 
         function Container() {
             //region HTML
-            let html = '    <div id="highlighter-create-category-container" class="highlighter-group-box">\n' +
+            let html = '<div id="highlighter-create-category-container" class="highlighter-group-box">\n' +
                 '        <div class="highlighter-group-box-title">Category Creator</div>\n' +
                 '        <div class="highlighter-inline-container">\n' +
                 '            <label for="highlighter-create-category-name" class="highlighter-input-label">Category:</label>\n' +
                 '            <input type="text" class="highlighter-input" id="highlighter-create-category-name" placeholder="Name"/>\n' +
-                '            <input id=\'highlighter-create-category-color\'/>\n' +
+                '            <input id=\'highlighter-create-category-text-color\'/>\n' +
+                '            <input id=\'highlighter-create-category-background-color\'/>\n' +
                 '        </div>\n' +
                 '        <div class="highlighter-inline-container">\n' +
                 '            <label class="highlighter-input-label" for="highlighter-create-custom-css-text-area">CSS:</label>\n' +
@@ -787,13 +804,20 @@ function UI(highlighter, titleText, menuToggledAction, customMenuButton) {
             };
             _.category = {
                 name: _container.querySelector('input[id="highlighter-create-category-name"]'),
-                colorSelector: _container.querySelector('input[id="highlighter-create-category-color"]'),
+                textColorSelector: _container.querySelector('input[id="highlighter-create-category-text-color"]'),
+                backgroundColorSelector: _container.querySelector('input[id="highlighter-create-category-background-color"]'),
                 customCssTextArea: _container.querySelector('textarea[id="highlighter-create-custom-css-text-area"]'),
                 addButton: _container.querySelector('button[id="highlighter-add-category-btn"]')
             };
 
-            $(_.category.colorSelector).spectrum({
-                color: "#ffffff"
+            $(_.category.textColorSelector).spectrum({
+                color: "#000000",
+                showAlpha: true
+            });
+
+            $(_.category.backgroundColorSelector).spectrum({
+                color: "#ffff00",
+                showAlpha: true
             });
 
             return this;

@@ -961,9 +961,9 @@ function HighlighterPlus() {
         this.remove = remove;
         this.getIndex = getIndex;
 
-        function add(name, color, css) {
+        function add(name, textColor, backgroundColor, css) {
             if (_categories.find(x => x.name === name) === undefined) {
-                let category = new HighlighterCategory(name, color, css);
+                let category = new HighlighterCategory(name, textColor, backgroundColor, css);
                 addStyle(category);
                 _categories.push(category);
                 save();
@@ -971,11 +971,12 @@ function HighlighterPlus() {
             }
             return null;
         }
-        function update(index, name, color, css) {
+        function update(index, name, textColor, backgroundColor, css) {
             let category = _categories[index];
             removeStyle(category);
             category.name = name;
-            category.color = color;
+            category.color = textColor;
+            category.backgroundColor = backgroundColor;
             category.style = css;
             addStyle(category);
             save();
@@ -1030,12 +1031,13 @@ function HighlighterPlus() {
         function HighlighterStyle(category) {
             let style = document.createElement('style');
             style.id = category.styleId;
-            style.innerHTML = `.${category.elementId}{color:${category.color}} .${category.elementId}${category.style}`;
+            style.innerHTML = `.${category.elementId}{color:${category.color}; background-color:${category.backgroundColor};} .${category.elementId}${category.style}`;
             return style;
         }
-        function HighlighterCategory(name, color, style) {
+        function HighlighterCategory(name, textColor, backgroundColor, style) {
             this.name = name;
-            this.color = color;
+            this.color = textColor;
+            this.backgroundColor = backgroundColor;
             this.elementId = `highlighter-category-${name.replace(/ /g, '-').toLowerCase()}`;
             this.styleId = `highlighter-style-${name.replace(/ /g, '-').toLowerCase()}`;
             this.style = style;
